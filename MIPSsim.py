@@ -261,7 +261,7 @@ class IF:
                 if pre_issue_len > 2:
                     self.IF_every = 1
                 while self.IF_every > 0:
-                    fetch_code = Pipeline.line_list.get(str(self.PC), 'None')
+                    fetch_code = Pipeline.line_list.get(str(Pipeline.PC), 'None')
                     if fetch_code is not None:
                         opname = fetch_code.split(' ', 2)[0]
                         if opname in ['BREAK']:
@@ -282,12 +282,12 @@ class IF:
 class Issue:
     pre_issue_buffer = []
     pre_issue_flag = []
-    Issue_max = 2
+    Issue_fire_every = 2
     current_fired = []
     pre_issue_max = 4
 
     def __init__(self):
-        self.firedLen = Issue.Issue_max
+        self.firedLen = Issue.Issue_fire_every
         self.pre_issue_len = len(Issue.pre_issue_buffer)
 
     def fire(self):
@@ -308,13 +308,13 @@ class Issue:
                                 # ALUB
                                 if len(ALUB.pre_ALUB) < ALUB.pre_ALUB_max:
                                     ALUB.pre_ALUB.append(code)
-                                    self.fire_add_scoreboard(reg_list)
+
                                     Issue.current_fired.append(code)
                             else:
                                 # ALU
                                 if len(ALU.pre_ALU) < ALU.pre_ALU_max:
                                     ALU.pre_ALU.append(code)
-                                    self.fire_add_scoreboard(reg_list)
+
                                     Issue.current_fired.append(code)
 
             self.firedLen -= 1
@@ -497,59 +497,61 @@ class ALU:
                 rs = int(self.operator[1].strip()[1:])
                 rt = int(self.operator[2].strip()[1:])
                 if '#' in self.operator[2]:
-                    Pipeline.Regs[rd] = Pipeline.Regs[rs] + rt
-                    self.reg_result_mark(rd, Pipeline.Regs[rd])
+                    # Pipeline.Regs[rd] = Pipeline.Regs[rs] + rt
+                    self.reg_result_mark(rd, Pipeline.Regs[rs] + rt)
                 else:
-                    Pipeline.Regs[rd] = Pipeline.Regs[rs] + Pipeline.Regs[rt]
-                    self.reg_result_mark(rd, Pipeline.Regs[rd])
+                    # Pipeline.Regs[rd] = Pipeline.Regs[rs] + Pipeline.Regs[rt]
+                    self.reg_result_mark(rd, Pipeline.Regs[rs] + Pipeline.Regs[rt])
 
             elif self.opname == 'SUB':
                 rd = int(self.operator[0].strip()[1:])
                 rs = int(self.operator[1].strip()[1:])
                 rt = int(self.operator[2].strip()[1:])
                 if '#' in self.operator[2]:
-                    Pipeline.Regs[rd] = Pipeline.Regs[rs] - rt
-                    self.reg_result_mark(rd, Pipeline.Regs[rd])
+                    # Pipeline.Regs[rd] = Pipeline.Regs[rs] - rt
+                    self.reg_result_mark(rd, Pipeline.Regs[rs] - rt)
                 else:
-                    Pipeline.Regs[rd] = Pipeline.Regs[rs] - Pipeline.Regs[rt]
-                    self.reg_result_mark(rd, Pipeline.Regs[rd])
+                    # Pipeline.Regs[rd] = Pipeline.Regs[rs] - Pipeline.Regs[rt]
+                    self.reg_result_mark(rd, Pipeline.Regs[rs] - Pipeline.Regs[rt])
             elif self.opname == 'AND':
                 rd = int(self.operator[0].strip()[1:])
                 rs = int(self.operator[1].strip()[1:])
                 rt = int(self.operator[2].strip()[1:])
                 if '#' in self.operator[2]:
-                    Pipeline.Regs[rd] = Pipeline.Regs[rs] & rt
-                    self.reg_result_mark(rd, Pipeline.Regs[rd])
+                    # Pipeline.Regs[rd] = Pipeline.Regs[rs] & rt
+                    self.reg_result_mark(rd, Pipeline.Regs[rs] & rt)
                 else:
-                    Pipeline.Regs[rd] = Pipeline.Regs[rs] & Pipeline.Regs[rt]
-                    self.reg_result_mark(rd, Pipeline.Regs[rd])
+                    # Pipeline.Regs[rd] = Pipeline.Regs[rs] & Pipeline.Regs[rt]
+                    self.reg_result_mark(rd, Pipeline.Regs[rs] & Pipeline.Regs[rt])
             elif self.opname == 'NOR':
                 rd = int(self.operator[0].strip()[1:])
                 rs = int(self.operator[1].strip()[1:])
                 rt = int(self.operator[2].strip()[1:])
                 if '#' in self.operator[2]:
-                    Pipeline.Regs[rd] = ~(Pipeline.Regs[rs] | rt)
-                    self.reg_result_mark(rd, Pipeline.Regs[rd])
+                    # Pipeline.Regs[rd] = ~(Pipeline.Regs[rs] | rt)
+                    self.reg_result_mark(rd, ~(Pipeline.Regs[rs] | rt))
                 else:
-                    Pipeline.Regs[rd] = ~(Pipeline.Regs[rs] | Pipeline.Regs[rt])
-                    self.reg_result_mark(rd, Pipeline.Regs[rd])
+                    # Pipeline.Regs[rd] = ~(Pipeline.Regs[rs] | Pipeline.Regs[rt])
+                    self.reg_result_mark(rd, ~(Pipeline.Regs[rs] | Pipeline.Regs[rt]))
             elif self.opname == 'SLT':
                 rd = int(self.operator[0].strip()[1:])
                 rs = int(self.operator[1].strip()[1:])
                 rt = int(self.operator[2].strip()[1:])
                 if '#' in self.operator[2]:
                     if Pipeline.Regs[rs] < rt:
-                        Pipeline.Regs[rd] = 1
-                        self.reg_result_mark(rd, Pipeline.Regs[rd])
+                        # Pipeline.Regs[rd] = 1
+                        self.reg_result_mark(rd, 1)
                     else:
-                        Pipeline.Regs[rd] = 0
+                        # Pipeline.Regs[rd] = 0
+                        self.reg_result_mark(rd, 0)
+
                 else:
                     if Pipeline.Regs[rs] < Pipeline.Regs[rt]:
-                        Pipeline.Regs[rd] = 1
-                        self.reg_result_mark(rd, Pipeline.Regs[rd])
+                        # Pipeline.Regs[rd] = 1
+                        self.reg_result_mark(rd, 1)
                     else:
-                        Pipeline.Regs[rd] = 0
-                        self.reg_result_mark(rd, Pipeline.Regs[rd])
+                        # Pipeline.Regs[rd] = 0
+                        self.reg_result_mark(rd, 0)
 
             self.addPostALU(self.reg_write_list, self.reg_write_res, code)
 
@@ -623,8 +625,8 @@ class Pipeline:
                 Issue.pre_issue_buffer.append(code)
             IF.IF_Current_Cycle = []
         if len(Issue.current_fired) > 0:
-            for index, code in enumerate(Issue.current_fired):
-                Issue.pre_issue_buffer.pop(index)
+            for code in Issue.current_fired:
+                Issue.pre_issue_buffer.pop(code)
             Issue.current_fired = []
         if len(ALU.current_ALU) > 0:
             ALU.pre_ALU.pop(0)
