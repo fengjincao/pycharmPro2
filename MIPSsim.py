@@ -291,33 +291,34 @@ class Issue:
         self.pre_issue_len = len(Issue.pre_issue_buffer)
 
     def fire(self):
-        while self.firedLen > 0:
+        currentIndex = 0
+        while currentIndex < Issue.Issue_fire_every:
             if self.pre_issue_len > 0:
-                for code in Issue.pre_issue_buffer:
-                    op_name, reg_list = get_code_operator(code)
-                    if op_name in ['SW', 'LW']:
-                        # MEM
-                        pass
-                    else:
-                        canFire = True
-                        for reg_willing in reg_list:
-                            if ScoreBoard.reg_using[reg_willing] == 1:
-                                canFire = False
-                        if canFire:
-                            if code in ['SLL', 'SRL', 'SRA', 'MUL']:
-                                # ALUB
-                                if len(ALUB.pre_ALUB) < ALUB.pre_ALUB_max:
-                                    ALUB.pre_ALUB.append(code)
+                code = Issue.pre_issue_buffer[currentIndex]
+                op_name, reg_list = get_code_operator(code)
+                if op_name in ['SW', 'LW']:
+                    # MEM
+                    pass
+                else:
+                    canFire = True
+                    for reg_willing in reg_list:
+                        if ScoreBoard.reg_using[reg_willing] == 1:
+                            canFire = False
+                    if canFire:
+                        if code in ['SLL', 'SRL', 'SRA', 'MUL']:
+                            # ALUB
+                            if len(ALUB.pre_ALUB) < ALUB.pre_ALUB_max:
+                                #ALUB.pre_ALUB.append(code)
+                                ALUB.current_ALUB_Accept.append(code)
+                                Issue.current_fired.append(code)
+                        else:
+                            # ALU
+                            if len(ALU.pre_ALU) < ALU.pre_ALU_max:
+                                #ALU.pre_ALU.append(code)
+                                ALU.current_ALU_Accept.append(code)
+                                Issue.current_fired.append(code)
 
-                                    Issue.current_fired.append(code)
-                            else:
-                                # ALU
-                                if len(ALU.pre_ALU) < ALU.pre_ALU_max:
-                                    ALU.pre_ALU.append(code)
-
-                                    Issue.current_fired.append(code)
-
-            self.firedLen -= 1
+            currentIndex += 1
 
     def WAW_hazards(self, type):
         pass
@@ -337,6 +338,7 @@ class MEM:
     pre_MEM = []
     post_MEM = {}
     current_MEM = []
+    current_MEM_Accept = []
     MEM_max = 1
     reg_write_list = []
     reg_write_list = []
@@ -382,6 +384,7 @@ class ALUB:
     pre_ALUB_max = 4
     post_ALUB_max = 1
     current_ALUB = []
+    current_ALUB_Accept = []
     reg_write_list = []
     reg_write_res = []
     wait_2 = 2
@@ -473,6 +476,7 @@ class ALU:
     pre_ALU_max = 4
     post_ALU_max = 1
     current_ALU = []
+    current_ALU_Accept = []
     reg_write_list = []
     reg_write_res = []
     post_ALU_code = ''
@@ -626,14 +630,22 @@ class Pipeline:
             IF.IF_Current_Cycle = []
         if len(Issue.current_fired) > 0:
             for code in Issue.current_fired:
-                Issue.pre_issue_buffer.pop(code)
+                Issue.pre_issue_buffer.remove(code)
             Issue.current_fired = []
         if len(ALU.current_ALU) > 0:
             ALU.pre_ALU.pop(0)
             ALU.current_ALU = []
+        if len(ALU.current_ALU_Accept) >0:
+            for code in ALU.current_ALU_Accept:
+                ALU.pre_ALU.append(code)
+            ALU.current_ALU_Accept = []
         if len(ALUB.current_ALUB) > 0:
             ALUB.pre_ALUB.pop(0)
             ALUB.current_ALUB = []
+        if len(ALUB.current_ALUB_Accept) >0:
+            for code in ALUB.current_ALUB_Accept:
+                ALUB.pre_ALUB.append(code)
+            ALUB.current_ALUB_Accept = []
         Pipeline.Recodes.append({
             'cycle': Pipeline.cycle, 'PC': Pipeline.PC,
             'IF': IF.IF_Waiting_Executed[:],
